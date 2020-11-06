@@ -7,3 +7,6 @@ This repository contains the Python implementation for scAdapt. scAdapt is a vir
 
 # Run the demo
 python scAdapt/predict_example.py
+
+# Tutorials
+Coming soon...
