@@ -61,6 +61,19 @@ def train(args, data_set):
     class_num = max(train_set['labels'])+1
     class_num_test = max(test_set['labels']) + 1
 
+    ### re-weighting the classifier
+    cls_num_list = [np.sum(train_set['labels'] == i) for i in range(class_num)]
+    #from https://github.com/YyzHarry/imbalanced-semi-self/blob/master/train.py
+    # # Normalized weights based on inverse number of effective data per class.
+    #2019 Learning Imbalanced Datasets with Label-Distribution-Aware Margin Loss
+    #2020 Rethinking the Value of Labels for Improving Class-Imbalanced Learning
+    beta = 0.9999
+    effective_num = 1.0 - np.power(beta, cls_num_list)
+    per_cls_weights = (1.0 - beta) / np.array(effective_num)
+    per_cls_weights = per_cls_weights / np.sum(per_cls_weights) * len(cls_num_list)
+    per_cls_weights = torch.FloatTensor(per_cls_weights).cuda()
+
+
     ## set base network
     embedding_size = args.embedding_size
     base_network = FeatureExtractor(num_inputs=train_set['features'].shape[1], embed_size = embedding_size).cuda()
@@ -100,8 +113,27 @@ def train(args, data_set):
                 target_loader_align = torch.utils.data.DataLoader(data, batch_size=batch_size, shuffle=True, drop_last=True,
                                                             **kwargs)
 
-            model_file = './model_save/final_model_' + str(epoch) + source_name + target_name+'.ckpt'
+            result_path = args.result_path #"../results/"
+            model_file = result_path + 'final_model_' + str(epoch) + source_name + target_name+'.ckpt'
             torch.save({'base_network': base_network.state_dict(), 'label_predictor': label_predictor.state_dict()}, model_file)
+
+            if not os.path.exists(result_path):
+                os.makedirs(result_path)
+            with torch.no_grad():
+                code_arr_s = base_network(Variable(torch.FloatTensor(train_set['features']).cuda()))
+                code_arr_t = base_network(Variable(torch.FloatTensor(test_set_eval['features']).cuda()))
+                code_arr = np.concatenate((code_arr_s.cpu().data.numpy(), code_arr_t.cpu().data.numpy()), 0)
+
+            digit_label_dict = pd.read_csv(args.dataset_path + 'digit_label_dict.csv')
+            digit_label_dict = pd.DataFrame(zip(digit_label_dict.iloc[:,0], digit_label_dict.index), columns=['digit','label'])
+            digit_label_dict = digit_label_dict.to_dict()['label']
+            # transform digit label to cell type name
+            y_pred_label = [digit_label_dict[x] if x in digit_label_dict else x for x in predict_label_arr.cpu().data.numpy()]
+
+            pred_labels_file = result_path + 'pred_labels_' + source_name + "_" + target_name + "_" + str(epoch) + ".csv"
+            pd.DataFrame([predict_prob_arr.cpu().data.numpy(), y_pred_label],  index=["pred_probability", "pred_label"]).to_csv(pred_labels_file, sep=',')
+            embedding_file = result_path + 'embeddings_' + source_name + "_" + target_name + "_" + str(epoch)+ ".csv"
+            pd.DataFrame(code_arr).to_csv(embedding_file, sep=',')
 
             #### only for evaluation
             # acc_by_label = np.zeros( class_num_test )
@@ -109,27 +141,17 @@ def train(args, data_set):
             # for i in range(class_num_test):
             #     acc_by_label[i] = np.sum(predict_label_arr.cpu().data.numpy()[all_label == i] == i) / np.sum(all_label == i)
             # np.set_printoptions(suppress=True)
-            # print('iter:', epoch, "average acc over all test cell types: ", round(np.nanmean(acc_by_label), 3),
-            #       "acc of each test cell type: ", acc_by_label)
+            # print('iter:', epoch, "average acc over all test cell types: ", round(np.nanmean(acc_by_label), 3))
+            # print("acc of each test cell type: ", acc_by_label)
 
-            # with torch.no_grad():
-            #     code_arr_s = base_network(Variable(torch.FloatTensor(train_set['features']).cuda()))
-            #     code_arr_t = base_network(Variable(torch.FloatTensor(test_set_eval['features']).cuda()))
-            #     code_arr = np.concatenate((code_arr_s.cpu().data.numpy(), code_arr_t.cpu().data.numpy()), 0)
-            # result_path = "../results/"
-            # if not os.path.exists(result_path):
-            #     os.makedirs(result_path)
             # div_score, div_score_all, ent_score, sil_score = evaluate_multibatch(code_arr, train_set, test_set_eval, epoch)
-            #
-            # #results_file = result_path + source_name + "_" + target_name + "_" + str(epoch)+ "_acc_div_sil.csv"
-            # #evel_res = [np.nanmean(acc_by_label), div_score, div_score_all, ent_score, sil_score]
-            # #pd.DataFrame(evel_res, index = ["acc","div_score","div_score_all","ent_score","sil_score"], columns=["values"]).to_csv(results_file, sep=',')
-            #
+            #results_file = result_path + source_name + "_" + target_name + "_" + str(epoch)+ "_acc_div_sil.csv"
+            #evel_res = [np.nanmean(acc_by_label), div_score, div_score_all, ent_score, sil_score]
+            #pd.DataFrame(evel_res, index = ["acc","div_score","div_score_all","ent_score","sil_score"], columns=["values"]).to_csv(results_file, sep=',')
             # pred_labels_file = result_path + source_name + "_" + target_name + "_" + str(epoch) + "_pred_labels.csv"
             # pd.DataFrame([predict_label_arr.cpu().data.numpy(), all_label],  index=["pred_label", "true_label"]).to_csv(pred_labels_file, sep=',')
-            #
-            # embedding_file = result_path + source_name + "_" + target_name + "_" + str(epoch)+ "_embeddings.csv"
-            # pd.DataFrame(code_arr).to_csv(embedding_file, sep=',')
+
+
 
         ## train one iter
         base_network.train(True)
@@ -188,7 +210,8 @@ def train(args, data_set):
 
 
         ######CrossEntropyLoss
-        classifier_loss = loss_utility.CrossEntropyLoss(labels_source.float(), nn.Softmax(dim=1)(output_source))
+        classifier_loss = nn.CrossEntropyLoss(weight=per_cls_weights)(output_source, torch.max(labels_source, dim=1)[1])
+        # classifier_loss = loss_utility.CrossEntropyLoss(labels_source.float(), nn.Softmax(dim=1)(output_source))
 
         ######semantic_loss and center loss
         cell_th = args.cell_th

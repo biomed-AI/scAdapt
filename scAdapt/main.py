@@ -1,25 +1,30 @@
 import argparse
 import pandas as pd
 from scAdapt import train
+import os
+import numpy as np
 
-def preprocess():
-    root_path = "../processed_data/"
-    print(root_path)
-    normcounts = pd.read_csv(root_path+'combine_baron.csv')
-    labels = pd.read_csv(root_path+'combine_labels_baron.csv')
-    domain_labels = pd.read_csv(root_path+'domain_labels_baron.csv')
+def preprocess(args):
+    dataset_path = args.dataset_path  #"../processed_data/"
+    print("dataset_path: ", dataset_path)
+    normcounts = pd.read_csv(dataset_path + 'combine_expression.csv')
+    labels = pd.read_csv(dataset_path + 'combine_labels.csv')
+    domain_labels = pd.read_csv(dataset_path + 'domain_labels.csv')
     data_set = {'features': normcounts.T.values, 'labels': labels.iloc[:, 0].values,
                'accessions': domain_labels.iloc[:, 0].values}
+
     return data_set
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='scAdapt: virtual adversarial domain adversarial network')
+    parser = argparse.ArgumentParser(description='scAdapt: virtual adversarial domain adaptation network')
     parser.add_argument('--method', type=str, default='DANN', choices=['DANN', 'mmd'])
     parser.add_argument('--batch_size', type=int, default=256, help='batch_size')
     parser.add_argument('--embedding_size', type=int, default=256, help='embedding_size')
-    parser.add_argument('--source_name', type=str, default='TM_baron_mouse_for_baron')
-    parser.add_argument('--target_name', type=str, default='baron_human')
+    parser.add_argument('--source_name', type=str, default='TM_baron_mouse_for_segerstolpe')
+    parser.add_argument('--target_name', type=str, default='segerstolpe_human')
+    parser.add_argument('--result_path', type=str, default='../results/')
+    parser.add_argument('--dataset_path', type=str, default='../processed_data/')
     parser.add_argument('--num_iterations', type=int, default=50010, help="num_iterations")
     parser.add_argument('--BNM_coeff', type=float, default=0.2, help="regularization coefficient for BNM loss")
     parser.add_argument('--centerloss_coeff', type=float, default=1.0,  help='regularization coefficient for center loss')
@@ -40,7 +45,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id  #'0,1,2,3'
     print(args)
-    data_set = preprocess()
+    data_set = preprocess(args)
     train(args, data_set=data_set)
 
 
