@@ -26,7 +26,7 @@ python main.py --dataset_path path/to/input/files
                --result_path path/for/output/files
                --source_name batch name
                --target_name batch name
-			  --gpu_id GPU id to run
+	       --gpu_id GPU id to run
 ```
 
 A demo file `example.py` is provided in the `scAdapt` folder, and the corresponding datasets are provided in the `processed_data` folder. In the demo, we use mouse pancreas data (Baron and Tabula Muris) as source and human pancreas data (Segerstolpe) as target. The demo can be run with the following command with default parameters:
