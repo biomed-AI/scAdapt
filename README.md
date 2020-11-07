@@ -28,6 +28,7 @@ python main.py --dataset_path path/to/input/files
                --target_name batch name
 	       --gpu_id GPU id to run
 ```
+The `dataset_path` must contain the four CSV files preprocessed as in `processed_data` folder. In `result_path`, there will be three output files: `final_model_*.ckpt` has the trained model    parameters (i.e. weights and biases) and can be loaded for label prediction. `pred_labels_*.csv` contains the predicted cell label and corresponding confidence score (softmax probability). `embeddings_*.csv` contains the batch-corrected low-dimensional embeddings (default is 256) for visualization.
 
 A demo file `example.py` is provided in the `scAdapt` folder, and the corresponding datasets are provided in the `processed_data` folder. In the demo, we use mouse pancreas data (Baron and Tabula Muris) as source and human pancreas data (Segerstolpe) as target. The demo can be run with the following command with default parameters:
 
