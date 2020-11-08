@@ -19,7 +19,29 @@ Log-normalized count matrix is recommonded as the input of scAdapt. Raw counts m
 `domain_labels.csv` is the batch/domain label array combining source and target.
 `digit_label_dict.csv` is the one-to-one mapping between digital label and cell type label.
 
-# Usage/Demo
+# Usage
+
+### API usage
+
+Here is example API usage of scAdapt in Python:
+
+```
+from scAdapt import scAdapt
+from config import * # set hyper-parameters
+
+dataset_path = args.dataset_path 
+normcounts = pd.read_csv(dataset_path + 'combine_expression.csv')
+labels = pd.read_csv(dataset_path + 'combine_labels.csv')
+domain_labels = pd.read_csv(dataset_path + 'domain_labels.csv')
+data_set = {'features': normcounts.T.values, 'labels': labels.iloc[:, 0].values,
+'accessions': domain_labels.iloc[:, 0].values}
+
+scAdapt(args=args, data_set=data_set)
+```
+
+### Python script usage
+
+An example of how to use scAdapt for both classification and batch correction is:
 
 ```bash
 python main.py --dataset_path path/to/input/files
@@ -28,18 +50,28 @@ python main.py --dataset_path path/to/input/files
                --target_name batch name
 	       --gpu_id GPU id to run
 ```
+
 The `dataset_path` must contain the four CSV files preprocessed as in `processed_data` folder. In `result_path`, there will be three output files: `final_model_*.ckpt` has the trained model    parameters (i.e. weights and biases) and can be loaded for label prediction. `pred_labels_*.csv` contains the predicted cell label and corresponding confidence score (softmax probability). `embeddings_*.csv` contains the batch-corrected low-dimensional embeddings (default is 256) for visualization.
+
+### Demo
 
 A demo file `example.py` is provided in the `scAdapt` folder, and the corresponding datasets are provided in the `processed_data` folder. In the demo, we use mouse pancreas data (Baron and Tabula Muris) as source and human pancreas data (Segerstolpe) as target. The demo can be run with the following command with default parameters:
 
-`python scAdapt/example.py`
+`python example.py`
 
-# Tutorials
+We can evaluate how well our predicted cell type labels match the true labels with Confusion heatmap. For this demo dataset, we find that there is a perfect agreement (Average acc = 0.98) in cell type prediction.
 
-Coming soon...
+<p align="center">
+    <img src="results/confusion_map.png" width="638">
+</p>
 
-## Questions
+We can also plot the low-dimensional embeddings of scAdapt model by UMAP. We can find that the cells from mouse and human dataset are well mixed by cell type while the clusters of different cell types are separated clearly.
 
-For questions about the datasets and code, please contact [zhoux85@mail2.sysu.edu.cn](mailto:zhoux85@mail2.sysu.edu.cn). 
+<p align="center">
+    <img src="results/UMAP.png" width="638">
+</p>
 
+# Questions
+
+For questions about the datasets and code, please contact [zhoux85@mail2.sysu.edu.cn](mailto:zhoux85@mail2.sysu.edu.cn).
 
