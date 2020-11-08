@@ -1,6 +1,6 @@
 import argparse
 import pandas as pd
-from scAdapt import train
+from scAdapt import scAdapt
 import os
 
 def preprocess(args):
@@ -59,6 +59,6 @@ if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id  #'0,1,2,3'
     print(args)
     data_set = preprocess(args)
-    train(args, data_set=data_set)
+    scAdapt(args, data_set=data_set)
 
 

@@ -31,7 +31,7 @@ from center_loss import CenterLoss
 
 torch.set_num_threads(2)
 
-def train(args, data_set):
+def scAdapt(args, data_set):
     ## prepare data
     batch_size = args.batch_size
     kwargs = {'num_workers': 0, 'pin_memory': True}
