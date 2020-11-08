@@ -7,9 +7,9 @@ This repository contains the preprocessed data and Python implementation for scA
 
 # Requirements
 
-pyTorch>=1.1.0
-umap-learn>=0.3.8
-universal-divergence>=0.2.0
+* pyTorch>=1.1.0
+* umap-learn>=0.3.8
+* universal-divergence>=0.2.0
 
 # Data preparation
 
