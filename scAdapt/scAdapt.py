@@ -115,7 +115,11 @@ def scAdapt(args, data_set):
 
             result_path = args.result_path #"../results/"
             model_file = result_path + 'final_model_' + str(epoch) + source_name + target_name+'.ckpt'
+<<<<<<< HEAD
             # torch.save({'base_network': base_network.state_dict(), 'label_predictor': label_predictor.state_dict()}, model_file)
+=======
+            torch.save({'base_network': base_network.state_dict(), 'label_predictor': label_predictor.state_dict()}, model_file)
+>>>>>>> 3b49eb9dc78fabc035bb9b4e60f3cb9c8c18c5f3
 
             if not os.path.exists(result_path):
                 os.makedirs(result_path)
@@ -130,6 +134,7 @@ def scAdapt(args, data_set):
             # transform digit label to cell type name
             y_pred_label = [digit_label_dict[x] if x in digit_label_dict else x for x in predict_label_arr.cpu().data.numpy()]
 
+<<<<<<< HEAD
             # pred_labels_file = result_path + 'pred_labels_' + source_name + "_" + target_name + "_" + str(epoch) + ".csv"
             # pd.DataFrame([predict_prob_arr.cpu().data.numpy(), y_pred_label],  index=["pred_probability", "pred_label"]).to_csv(pred_labels_file, sep=',')
             # embedding_file = result_path + 'embeddings_' + source_name + "_" + target_name + "_" + str(epoch)+ ".csv"
@@ -143,6 +148,21 @@ def scAdapt(args, data_set):
             np.set_printoptions(suppress=True)
             print('iter:', epoch, "average acc over all test cell types: ", round(np.nanmean(acc_by_label), 3))
             print("acc of each test cell type: ", np.round(acc_by_label, 3))
+=======
+            pred_labels_file = result_path + 'pred_labels_' + source_name + "_" + target_name + "_" + str(epoch) + ".csv"
+            pd.DataFrame([predict_prob_arr.cpu().data.numpy(), y_pred_label],  index=["pred_probability", "pred_label"]).to_csv(pred_labels_file, sep=',')
+            embedding_file = result_path + 'embeddings_' + source_name + "_" + target_name + "_" + str(epoch)+ ".csv"
+            pd.DataFrame(code_arr).to_csv(embedding_file, sep=',')
+
+            #### only for evaluation
+            # acc_by_label = np.zeros( class_num_test )
+            # all_label = test_set['labels']
+            # for i in range(class_num_test):
+            #     acc_by_label[i] = np.sum(predict_label_arr.cpu().data.numpy()[all_label == i] == i) / np.sum(all_label == i)
+            # np.set_printoptions(suppress=True)
+            # print('iter:', epoch, "average acc over all test cell types: ", round(np.nanmean(acc_by_label), 3))
+            # print("acc of each test cell type: ", acc_by_label)
+>>>>>>> 3b49eb9dc78fabc035bb9b4e60f3cb9c8c18c5f3
 
             # div_score, div_score_all, ent_score, sil_score = evaluate_multibatch(code_arr, train_set, test_set_eval, epoch)
             #results_file = result_path + source_name + "_" + target_name + "_" + str(epoch)+ "_acc_div_sil.csv"

@@ -23,8 +23,13 @@ if __name__ == "__main__":
     parser.add_argument('--embedding_size', type=int, default=256, help='embedding_size')
     parser.add_argument('--source_name', type=str, default='TM_baron_mouse_for_segerstolpe')
     parser.add_argument('--target_name', type=str, default='segerstolpe_human')
+<<<<<<< HEAD
     parser.add_argument('--result_path', type=str, default='./results/')
     parser.add_argument('--dataset_path', type=str, default='./processed_data/')
+=======
+    parser.add_argument('--result_path', type=str, default='../results/')
+    parser.add_argument('--dataset_path', type=str, default='../processed_data/')
+>>>>>>> 3b49eb9dc78fabc035bb9b4e60f3cb9c8c18c5f3
     parser.add_argument('--num_iterations', type=int, default=50010, help="num_iterations")
     parser.add_argument('--BNM_coeff', type=float, default=0.2, help="regularization coefficient for BNM loss")
     parser.add_argument('--centerloss_coeff', type=float, default=1.0,  help='regularization coefficient for center loss')
